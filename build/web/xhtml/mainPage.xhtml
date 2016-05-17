@@ -1,0 +1,150 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+    <ui:composition template="/templates/layout.xhtml">
+        <ui:define name="top">
+            <!-->{bundle.Message}<-->
+        </ui:define>
+        <ui:define id="mainContent" name="content">
+            <f:event type="preRenderView" listener="#{onBodyLoad.init}"/>
+            <h:form id="mainForm">
+                <p:ajaxStatus onstart="PF('statusDialog').show()" onsuccess="PF('statusDialog').hide()"/>
+                <p:dialog widgetVar="statusDialog" showHeader="false" modal="true" resizable="false">
+                    <p:graphicImage value="/resources/images/ajax_load.gif"/>
+                </p:dialog>
+                <p:growl id="message" showDetail="true" />
+                <f:event type="preRenderView" listener="#{prospectListModel.setProspectList(returnObject.prospectList())}"/>
+                <f:event type="preRenderView" listener="#{memberListModel.setMemberList(returnObject.memberList())}"/>
+                <p:tabView>
+                    <p:tab title="Prospect">
+                        <p:dataTable id="prospectList"
+                                     value="#{prospectListModel.prospectList}"							 
+                                     var="pList"
+                                     scrollHeight="200"
+                                     scrollRows="100"
+                                     scrollable="true"
+                                     liveScroll="true"
+                                     rowIndexVar="rowIndex" 
+                                     rowKey="#{pList.prospectNo}"
+                                     selection="#{moveProspectBean.prospect.prospectList}"
+                                     reflow="true">
+                            <p:column selectionMode="multiple" style="width:16px;text-align:center"/>
+                            <p:column filterBy="#{pList.prospectNo}"
+                                      headerText="Prospect" 
+                                      priority="1">
+                                <h:outputText value="#{pList.prospectNo}"/>
+                            </p:column>
+                            <p:column filterBy="#{pList.lastName}, #{pList.firstName} #{pList.middleName} #{pList.suffix}"
+                                      headerText="Name" 
+                                      priority="1"
+                                      sortBy="#{pList.lastName}, #{pList.firstName} #{pList.middleName} #{pList.suffix}">
+                                <h:outputText value="#{pList.lastName}, #{pList.firstName} #{pList.middleName} #{pList.suffix}"/>
+                            </p:column>
+                            <p:column headerText="Status" 
+                                      priority="1"
+                                      sortBy="#{returnObject.prosStat(pList.prosStat)}"
+                                      sortable="true">
+                                <h:outputText value="#{returnObject.prosStat(pList.prosStat)}"/>
+                            </p:column>
+                            <p:column filterBy="#{pList.ouCode.ouShortName}" 
+                                      headerText="PT" 
+                                      filterMatchMode="contains"
+                                      sortBy="#{pList.ouCode.ouShortName}">
+                                <h:outputText value="#{pList.ouCode.ouShortName}" />
+                            </p:column>
+                        </p:dataTable>
+
+                        <br/>
+                        <h:panelGrid columns="2">
+                            <p:outputLabel value="Move selected prospect to : "/>
+                            <p:selectOneMenu value="#{moveProspectBean.PTp}" label="PT No."
+                                             filter="true" filterMatchMode="contains">
+                                <f:selectItems value="#{returnObject.orgUnitList()}"
+                                               var="ou"
+                                               itemLabel="#{ou.ouShortName}"
+                                               itemValue="#{ou.ouCode}"/>
+                            </p:selectOneMenu>
+                        </h:panelGrid>
+
+                        <p:commandButton value="Move" 
+                                         actionListener="#{moveProspectBean.editProspectPT()}" 
+                                         update=":mainForm">
+                            <p:confirm header="Confirmation" message="You are about move the selected PROSPECT(S) to other PT. Are you sure you want to continue?" icon="ui-icon-alert" />
+                        </p:commandButton>
+
+                        <p:confirmDialog global="true" showEffect="fade">
+                            <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
+                            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+                        </p:confirmDialog>
+                    </p:tab>
+                    <p:tab title="Member">
+                        <p:dataTable id="memberList"
+                                     value="#{memberListModel.memberList}"							 
+                                     var="mList"
+                                     scrollHeight="200"
+                                     scrollRows="100"
+                                     scrollable="true"
+                                     liveScroll="true"
+                                     rowIndexVar="rowIndex" 
+                                     rowKey="#{mList.memNo}"
+                                     selection="#{moveProspectBean.member.memberList}"
+                                     reflow="true">
+                            <p:column selectionMode="multiple" style="width:16px;text-align:center"/>
+                            <p:column filterBy="#{mList.memIdNo}"
+                                      headerText="Member" 
+                                      priority="1">
+                                <h:outputText value="#{mList.memIdNo}"/>
+                            </p:column>
+                            <p:column filterBy="#{mList.lastName}, #{mList.firstName} #{mList.middleName} #{mList.suffix}"
+                                      headerText="Name" 
+                                      priority="1"
+                                      sortBy="#{mList.lastName}, #{mList.firstName} #{mList.middleName} #{mList.suffix}">
+                                <h:outputText value="#{mList.lastName}, #{mList.firstName} #{mList.middleName} #{mList.suffix}"/>
+                            </p:column>
+                            <p:column headerText="Status" 
+                                      priority="1"
+                                      sortBy="#{returnObject.memStat(mList.memStatus)}">
+                                <h:outputText value="#{returnObject.memStat(mList.memStatus)}"/>
+                            </p:column>
+                            <p:column filterBy="#{mList.ouCode.ouShortName}" 
+                                      headerText="PT" 
+                                      filterMatchMode="contains"
+                                      sortBy="#{mList.ouCode.ouShortName}">
+                                <h:outputText value="#{mList.ouCode.ouShortName}" />
+                            </p:column>
+                        </p:dataTable>
+
+                        <br/>
+                        <h:panelGrid columns="2">
+                            <p:outputLabel value="Move selected member to : "/>
+                            <p:selectOneMenu value="#{moveProspectBean.PTm}" label="PT No."
+                                             filter="true" filterMatchMode="contains">
+                                <f:selectItems value="#{returnObject.orgUnitList()}"
+                                               var="ou"
+                                               itemLabel="#{ou.ouShortName}"
+                                               itemValue="#{ou.ouCode}"/>
+                            </p:selectOneMenu>
+                        </h:panelGrid>
+
+                        <p:commandButton value="Move" 
+                                         actionListener="#{moveProspectBean.editMemberPT()}" 
+                                         update=":mainForm">
+                            <p:confirm header="Confirmation" 
+                                       message="You are about move the selected MEMBER(S) to other PT. Are you sure you want to continue?" 
+                                       icon="ui-icon-alert" />
+                        </p:commandButton>
+
+                        <p:confirmDialog global="true" showEffect="fade">
+                            <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
+                            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+                        </p:confirmDialog>
+                    </p:tab>
+                </p:tabView>
+            </h:form>
+        </ui:define>
+    </ui:composition>
+</html>
